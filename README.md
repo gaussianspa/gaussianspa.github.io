@@ -1,6 +1,6 @@
 # GaussianSpa
-# update initial
-
+# Update info
+## Initialize website
 This is the repository that contains source code for the [GaussianSpa website](https://gaussianspa.github.io).
 
 # Website License
