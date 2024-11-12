@@ -60,12 +60,12 @@
 
 
   <div id="container1">
-    <span class="top-left ply-label">Mini-Splatting</span>
+    <span class="top-left ply-label">GaussianSpa</span>
     <div id="gradient-overlay-left"></div>
   </div>
 
   <div id="container2">
-    <span class="top-right ply-label">GaussianSpa</span>
+    <span class="top-right ply-label">Mini-Splatting</span>
     <div id="gradient-overlay-right"></div>
   </div>
   <div class="blank-space"></div>
@@ -112,8 +112,8 @@
     }
 
     // Initialize two separate scenes for each PLY file
-    createScene("container1", "./static/images/playroom_point_cloudM_downsampled.ply", 0xffffff); // Left container
-    createScene("container2", "./static/images/playroom_point_cloud_downsampled.ply", 0xffffff); // Right container
+    createScene("container1", "./static/images/playroom_point_cloud_downsampled.ply", 0xffffff); // Left container
+    createScene("container2", "./static/images/playroom_point_cloudM_downsampled.ply", 0xffffff); // Right container
 
 
     window.addEventListener('scroll', () => {
