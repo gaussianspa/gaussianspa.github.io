@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+    content="GaussianSpa: An “Optimizing-Sparsifying” Simplification Framework for Compact and High-Quality Gaussian Splatting.">
+  <meta name="keywords" content="GaussianSpa">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GaussianSpa: An “Optimizing-Sparsifying” Simplification Framework for Compact and High-Quality 3D Gaussian
+    Splatting
+  </title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <!-- Image Comparison Slider -->
+  <!-- https://github.com/sneas/img-comparison-slider -->
+  <script defer src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css" />
+
+
+  <link rel="icon" href="./static/images/favicon.ico">
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script src="./static/js/video-comparison.js"></script>
+  <style>
+    /* Style each container to take half the width and full height */
+  </style>
+</head>
+
+<body>
+  <div id="loading-screen">Towards sparse representation for high-quality and compact 3D Gaussian Splatting.
+    <div class="loader"></div>
+  </div>
+
+  <div class="parallax-header">
+    <div class="navbar-menu">
+      <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+        <div class="navbar-item has-dropdown is-hoverable" style="color:white;">
+
+            GaussianSpa
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://Miaoyin390.github.io">
+              Noodle Lab
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div id="container1">
+    <span class="top-left ply-label">Mini-Splatting</span>
+    <div id="gradient-overlay-left"></div>
+  </div>
+
+  <div id="container2">
+    <span class="top-right ply-label">GaussianSpa</span>
+    <div id="gradient-overlay-right"></div>
+  </div>
+  <div class="blank-space"></div>
+  <script>
+    function createScene(containerId, plyFilePath, color) {
+      // Create scene, camera, and renderer
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / (2 * window.innerHeight), 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth / 2, window.innerHeight); // Half width for each renderer
+      document.getElementById(containerId).appendChild(renderer.domElement);
+
+      camera.position.set(0, 0, 1);
+      camera.lookAt(scene.position);
+      // Load the PLY file
+      const loader = new THREE.PLYLoader();
+      loader.load(plyFilePath, function (geometry) {
+        const material = new THREE.PointsMaterial({ color: color, size: 0.01 });
+        const pointCloud = new THREE.Points(geometry, material);
+        scene.add(pointCloud);
+        let angle = 1.4;
+        // Optional: Rotate point cloud in animation loop
+        pointCloud.rotation.z = Math.PI + 0.1; // Rotate point cloud to align with the camera
+        pointCloud.rotation.y = Math.PI - 0.2; // Rotate point cloud to align with the camera
+        pointCloud.rotation.x = -0.4; // Rotate point cloud to align with the camera
+
+        function animate() {
+          requestAnimationFrame(animate);
+
+          // Rotate the camera in a circular path around the origin
+          angle += 0.0005;
+          camera.position.x = 1 * Math.cos(angle); // radius of the circle
+          camera.position.z = 1 * Math.sin(angle); // radius of the circle
+          camera.lookAt(scene.position); // Keep camera pointed at the scene center
+          renderer.render(scene, camera);
+        }
+        animate();
+
+        if (containerId === "container2") {
+          window.scrollTo({ top: 0 });
+          document.getElementById("loading-screen").style.display = "none";
+        }
+      });
+    }
+
+    // Initialize two separate scenes for each PLY file
+    createScene("container1", "./static/images/playroom_point_cloudM_downsampled.ply", 0xffffff); // Left container
+    createScene("container2", "./static/images/playroom_point_cloud_downsampled.ply", 0xffffff); // Right container
+
+
+    window.addEventListener('scroll', () => {
+      const scrollPosition1 = window.scrollY;
+      const maxScroll1 = 1 * window.innerHeight;
+      const opacity1 = Math.min(scrollPosition1 / maxScroll1, 0.9);
+      const opacity2 = Math.min(scrollPosition1 / maxScroll1, 0.9);
+
+      document.getElementById("gradient-overlay-right").style.opacity = opacity1;
+      document.getElementById("gradient-overlay-left").style.opacity = opacity1;
+      document.getElementById("abstract1").style.opacity = 4 * opacity2 - 0.3;
+      document.getElementById("abstract2").style.opacity = 4 * opacity2 - 0.3;
+      const elements = document.getElementsByClassName("ply-label");
+      for (let i = 0; i < elements.length; i++) {
+        elements[i].style.opacity = 0.9 - 3 * opacity1;
+      }
+
+    });
+  </script>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">An “Optimizing-Sparsifying”
+              Simplification Framework
+              for Compact and High-Quality 3D Gaussian Splatting</h1>
+            <div class="is-size-4 publication-authors">
+              <span class="author-block">
+                <a href="https://miaoyin390.github.io/">Yangming Zhang</a><sup>1*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://miaoyin390.github.io/">Wenqi Jia</a><sup>1*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://niuwei.info/">Wei Niu</a><sup>2</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://miaoyin390.github.io/">Miao Yin</a><sup>1</sup>
+              </span>
+            </div>
+
+            <div class="is-size-4 publication-authors">
+              <span class="author-block"><sup>1</sup>Department of Computer Science, University of Texas at
+                Arlington</span>
+              <span class="author-block" style="display: block;"><sup>2</sup>School of Computing, University of
+                Georgia</span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2411.06019" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <!-- Video Link. -->
+                <!-- <span class="link-block">
+                  <a href="https://www.youtube.com/watch?vhk8IA"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                    </span>
+                    <span>Video</span>
+                  </a>
+                </span> -->
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="https://github.com/miaoyin390/GaussianSpa" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <!-- Dataset Link. -->
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered" sytle="margin-bottom:0rem;">
+        <div class="column is-four-fifths" style="padding-bottom:0rem;">
+          <h2 class="title is-3" id="abstract1">Abstract</h2>
+          <div class="content has-text-justified" sytle="margin-bottom:0rem;">
+            <p id="abstract2">
+              3D Gaussian Splatting (3DGS) has emerged as a main
+              stream for novel view synthesis, leveraging continuous aggregations of Gaussian functions to model scene
+              geometry.
+              However, 3DGS suffers from substantial memory
+              requirements to store the multitude of Gaussians, hindering its practicality. To address this challenge,
+              we
+              introduce GaussianSpa, an optimization-based simplification framework for compact and high-quality 3DGS.
+              Specifically, we formulate the simplification as an optimization
+              problem associated with the 3DGS training.
+              Correspondingly, we propose an efficient “optimizing-sparsifying”
+              solution that alternately solves two independent sub-problems,
+              gradually imposing strong sparsity onto
+              the Gaussians in the training process. Our comprehensive
+              evaluations on various datasets show the superiority
+              of GaussianSpa over existing state-of-the-art approaches.
+              Notably, GaussianSpa achieves an average
+              PSNR improvement of 0.9 dB on the real-world Deep
+              Blending dataset with 10× fewer Gaussians compared to the vanilla 3DGS.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paper video. -->
+      <div class="columns is-centered has-text-centered" sytle="margin-top:0rem;">
+        <div class="column is-four-fifths" style="padding:0rem;">
+
+          <div class="content has-text-centered">
+            <video class="video" width="100%" id="ablation1" loop="" playsinline="" autoplay="" muted=""
+              src="./static/images/counter_slide.mp4" onplay="resizeAndPlay(this)"></video>
+            <canvas class="videoMerge" id="ablation1Merge" controls style="width: 85%; height: auto;"></canvas>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Paper video. -->
+
+      <section class="section">
+        <div class="container is-max-desktop">
+          <h2 class="title is-3">Method Overview</h2>
+          <div class="is-centered has-text-centered"><img src="static/images/framework.svg" alt="framework" width="100%">
+          </div>
+          <p style="padding-top: 0.5rem; padding-bottom: 0rem;">
+
+
+          <ol style="padding-left: 1.5rem;" sytle="list-style-type:none;">
+            Our GaussianSpa formulates 3DGS simplification as a constrained optimization problem with a sparsity
+            constraint:
+            \begin{equation}\label{eqn:obj-opacity-form}
+            \begin{aligned}
+            \min_{(\boldsymbol{a},\boldsymbol{\Theta})} ~&\mathcal{L}(\boldsymbol{a},\boldsymbol{\Theta}),
+            \end{aligned}
+            \end{equation}
+            \begin{equation}
+            \begin{aligned}
+            \text{s.t.}\hspace{0.2cm}&\|\boldsymbol{a}\|_0\leq\kappa.
+            \end{aligned}
+            \end{equation}
+            Variable \(\boldsymbol{\Theta}\) represent other GS variables except for the Gaussian opacity \(\boldsymbol{a}\),
+            and the sparsity constraint restricts the \(\ell_0\) norm of the Gaussian opacity to a specified number.
+            We present an efficient "optimizing-sparsifying" solution to solve this problem, consisting of two main
+            steps
+            (please refer to our paper for more details):
+            <p>\begin{equation}\label{eqn:obj-optimizing}
+              \textbf{ “Optimizing” Step:}\hspace{0.3cm}\min_{\boldsymbol{a},\boldsymbol{{\Theta}}}\mathcal{L}(\boldsymbol{a},\boldsymbol{\Theta})+\frac{\delta}{2}\|\boldsymbol{a}-\boldsymbol{z}+\boldsymbol{\lambda}\|^2.
+              \end{equation}
+              The "optimizing" step essentially optimizes over the original Gaussian variables and pushes the Gaussian opacity
+              \(\boldsymbol{a}\)
+              close to the auxiliary \(\boldsymbol{z}\) that is exactly sparse using a gradient-based approach.
+              This way, it can simultaneously satisfy the 3DGS performance and the sparsity requirements,
+              achieving a sweet point in the training process.</p>
+            <p>
+              \begin{equation}\label{eqn:obj-sparsifying}
+              \textbf{ “Sparsifying” Step:}\hspace{0.3cm}\min_{\boldsymbol{z}}h(\boldsymbol{z})+\frac{\delta}{2}\|\boldsymbol{a}-\boldsymbol{z}+\boldsymbol{\lambda}\|^2.\hspace{0.6cm}
+              \end{equation}
+              The "sparsifying" step essentially prunes the auxiliary variable \(\boldsymbol{z}\),
+              which can be considered the exactly sparse version of \(\boldsymbol{a}\). By not directly operating
+              the original Gaussians, this step avoids the irreversible loss of important information.</li>
+            </p>
+            </p>
+        </div>
+      </section>
+
+
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Trajectory Comparison on Multiple Scenes</h2>
+      <div class="columns is-centered">
+        <div class="column">
+          <div class="content">
+            <div class="content has-text-centered">
+              <video class="video" width="100%" id="ablation2" loop="" playsinline="" autoplay="" muted=""
+                src="./static/images/playroom_slide.mp4" onplay="resizeAndPlay(this)"></video>
+              <canvas class="videoMerge" id="ablation2Merge" controls style="width: 100%; height: auto;"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="columns is-centered">
+            <div class="column content">
+              <div class="content has-text-centered">
+                <video class="video" width="100%" id="ablation3" loop="" playsinline="" autoplay="" muted=""
+                  src="./static/images/bonsai_slide.mp4" onplay="resizeAndPlay(this)"></video>
+                <canvas class="videoMerge" id="ablation3Merge" controls style="width: 98.6%; height: auto;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3">Visualized Comparison on Multiple Scenes</h2>
+      <div class="columns is-centered">
+        <div class="column">
+          <div class="content">
+            <h2 class="title is-4">Comparison to 3DGS</h2>
+            <p>
+              Our GaussianSpa presents higher-quality rendered views with up to 10x reduction than vanilla 3DGS.
+            </p>
+            <img-comparison-slider style="width: 100%;" hover="hover">
+              <span slot="first" class="img-container">
+                <img src="./static/images/train_00031GS.png" width="100%">
+                <span class="bottom-left">3DGS (2.32M)</span>
+              </span>
+              <span slot="second" class="img-container">
+                <img src="./static/images/train_00031.png" width="100%">
+                <span class="bottom-right">Ours (0.29M)</span>
+              </span>
+            </img-comparison-slider>
+
+            <img-comparison-slider style="width: 100%;" hover="hover">
+              <span slot="first" class="img-container">
+                <img src="./static/images/kitchen00009GS.png" width="100%">
+                <span class="bottom-left">3DGS (1.74M)</span>
+              </span>
+              <span slot="second" class="img-container">
+                <img src="./static/images/kitchen00009.png" width="100%">
+                <span class="bottom-right">Ours (0.42M)</span>
+              </span>
+            </img-comparison-slider>
+
+            <img-comparison-slider style="width: 100%;" hover="hover">
+              <span slot="first" class="img-container">
+                <img src="./static/images/GSBicycle1.png" width="100%">
+                <span class="bottom-left">3DGS (5.31M)</span>
+              </span>
+              <span slot="second" class="img-container">
+                <img src="./static/images/SpaBicycle1.png" width="100%">
+                <span class="bottom-right">Ours (0.66M)</span>
+              </span>
+            </img-comparison-slider>
+
+            <img-comparison-slider style="width: 100%;" hover="hover">
+              <span slot="first" class="img-container">
+                <img src="./static/images/counter00013GS.png" width="100%">
+                <span class="bottom-left">3DGS (1.17M)</span>
+              </span>
+              <span slot="second" class="img-container">
+                <img src="./static/images/counter00013.png" width="100%">
+                <span class="bottom-right">Ours (0.39M)</span>
+              </span>
+            </img-comparison-slider>
+
+            <img-comparison-slider style="width: 100%;" hover="hover">
+              <span slot="first" class="img-container">
+                <img src="static/images/playroom00011GS.png" width="100%">
+                <span class="bottom-left">3DGS (2.29M)</span>
+              </span>
+              <span slot="second" class="img-container">
+                <img src="static/images/playroom00011.png" width="100%">
+                <span class="bottom-right">Ours (0.22M)</span>
+              </span>
+            </img-comparison-slider>
+
+          </div>
+        </div>
+        <div class="column">
+          <div class="columns is-centered">
+            <div class="column content">
+              <h2 class="title is-4">Comparison to Mini-Splatting</h2>
+              <p>
+                Our GaussianSpa captures detail-rich textures more accurately compared to the SOTA.
+              </p>
+              <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                  <img src="static/images/train_00031M.png" width="100%">
+                  <span class="bottom-left">Mini-Splatting (0.29M)</span>
+                </span>
+                <span slot="second" class="img-container">
+                  <img src="static/images/train_00031.png" width="100%">
+                  <span class="bottom-right">Ours (0.29M)</span>
+                </span>
+              </img-comparison-slider>
+              <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                  <img src="static/images/kitchen00009M.png" width="100%">
+                  <span class="bottom-left">Mini-Splatting (0.44M)</span>
+                </span>
+                <span slot="second" class="img-container">
+                  <img src="static/images/kitchen00009.png" width="100%">
+                  <span class="bottom-right">Ours (0.42M)</span>
+                </span>
+              </img-comparison-slider>
+              <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                  <img src="static/images/MinisplattingBicycle1.png" width="100%">
+                  <span class="bottom-left">Mini-Splatting (0.65M)</span>
+                </span>
+                <span slot="second" class="img-container">
+                  <img src="static/images/SpaBicycle1.png" width="100%">
+                  <span class="bottom-right">Ours (0.66M)</span>
+                </span>
+              </img-comparison-slider>
+
+              <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                  <img src="static/images/counter00013M.png" width="100%">
+                  <span class="bottom-left">Mini-Splatting (0.41M)</span>
+                </span>
+                <span slot="second" class="img-container">
+                  <img src="static/images/counter00013.png" width="100%">
+                  <span class="bottom-right">Ours (0.39M)</span>
+                </span>
+              </img-comparison-slider>
+
+              <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                  <img src="static/images/playroom00011M.png" width="100%">
+                  <span class="bottom-left">Mini-Splatting (0.42M)</span>
+                </span>
+                <span slot="second" class="img-container">
+                  <img src="static/images/playroom00011.png" width="100%">
+                  <span class="bottom-right">Ours (0.22M)</span>
+                </span>
+              </img-comparison-slider>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@misc{zhang2024gaussianspaoptimizingsparsifyingsimplificationframework,
+        title={GaussianSpa: An "Optimizing-Sparsifying" Simplification Framework for Compact and High-Quality 3D Gaussian Splatting}, 
+        author={Yangming Zhang and Wenqi Jia and Wei Niu and Miao Yin},
+        year={2024},
+        eprint={2411.06019},
+        archivePrefix={arXiv},
+        primaryClass={cs.CV},
+        url={https://arxiv.org/abs/2411.06019}, 
+  }</code></pre>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <div class="container">
+      <!-- <div class="content has-text-centered">
+        <a class="icon-link" href="./static/videos/nerfies_paper.pdf">
+          <i class="fas fa-file-pdf"></i>
+        </a>
+        <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
+          <i class="fab fa-github"></i>
+        </a>
+      </div> -->
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This website is licensed under a <a rel="license"
+                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License</a>
+
+              and built on top of the <a href="https://nerfies.github.io/" target="_blank">Nerfies
+                template</a> and uses the <a href="https://github.com/sneas/img-comparison-slider" target="_blank">image
+                slider</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
